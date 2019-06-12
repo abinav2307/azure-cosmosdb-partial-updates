@@ -62,7 +62,6 @@
     <Compile Include="PartialUpdateOptions\ObjectMergeOptions.cs" />
     <Compile Include="PartialUpdateOptions\PartialUpdateMergeOptions.cs" />
     <Compile Include="PartialUpdate\CosmosDBPartialUpdater.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

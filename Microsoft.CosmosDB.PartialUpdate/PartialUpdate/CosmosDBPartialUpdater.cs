@@ -172,8 +172,6 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
                     partialUpdateMergeOptions.objectFilteringPropertyValue));
             }
 
-            Console.WriteLine("1.\nObject to update is: {0}", objectToUpdate.ToString());
-
             if (partialUpdateMergeOptions.ObjectMergeOptions == ObjectMergeOptions.REPLACE)
             {
                 // First, remove all the properties of this document since the user has chosen to replace the
@@ -207,8 +205,6 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
                     }
                 }
             }
-
-            Console.WriteLine("2.\nDocument post update is: {0}", documentToUpdate.ToString());
 
             return await CosmosDBHelper.UpsertDocumentAsync(this.DocumentClient, databaseName, collectionName, documentToUpdate, this.MaxRetriesOnThrottledAttempts);
         }
