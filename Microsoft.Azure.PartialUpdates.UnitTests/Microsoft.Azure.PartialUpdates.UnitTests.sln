@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.PartialUpdates.UnitTests", "Microsoft.Azure.PartialUpdates.UnitTests.csproj", "{544FAB9E-EBAF-4D34-97BD-2F7FBFB1909C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{544FAB9E-EBAF-4D34-97BD-2F7FBFB1909C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{544FAB9E-EBAF-4D34-97BD-2F7FBFB1909C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{544FAB9E-EBAF-4D34-97BD-2F7FBFB1909C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{544FAB9E-EBAF-4D34-97BD-2F7FBFB1909C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {12970220-97B3-4A8E-98E7-2950394A636B}
+	EndGlobalSection
+EndGlobal
