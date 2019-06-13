@@ -94,6 +94,51 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
         }
 
         /// <summary>
+        /// Test to verify a single root level property in the Document is successfully updated 
+        /// when running a partial update using the query overload
+        /// </summary>
+        [TestMethod]
+        [Owner("abinav2307")]
+        public async Task TestRootLevelPartialUpdateWithSingleFieldUsingQueryOverload()
+        {
+            await this.CreateDocumentAsync(GetSampleDocument());
+
+            ResourceResponse<Document> originalDocumentPriorToPartialUpdate = await CosmosDBHelper.ReadDocmentAsync(
+                this.DocumentClient,
+                this.DatabaseName,
+                this.CollectionName,
+                "123",
+                "123",
+                this.MaxRetriesOnDocumentClienException);
+
+            Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
+
+            // Assert the value of the field to be updated, prior to the update
+            Assert.AreEqual(originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<string>("employer"), "Some Company");
+
+            JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"employer\":\"Some Other Company\"}");
+
+            PartialUpdateMergeOptions partialUpdateMergeOptions = CreatePartialUpdateOptionsForRootLevelPartialUpdate();
+
+            CosmosDBPartialUpdater partialUpdater = new CosmosDBPartialUpdater(this.DocumentClient);
+
+            List<ResourceResponse<Document>> updatedDocumentList = await partialUpdater.ExecutePartialUpdate(
+                this.DatabaseName,
+                this.CollectionName,
+                "select * from c where c.id = '123'",
+                sampleUpdateDocumentWithOnePropertyToUpdate,
+                null,
+                partialUpdateMergeOptions);
+
+            Assert.AreEqual(updatedDocumentList.Count, 1);
+
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocumentList[0]);
+
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForRootLevelPartialUpdateWithSingleField().ToString());
+        }
+
+        /// <summary>
         /// Test to verify multiple root level properties in the Document are successfully updated when running a partial update
         /// </summary>
         [TestMethod]

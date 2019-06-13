@@ -30,6 +30,53 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
         /// Execute a partial update of the document specified by the partition key and id. 
         /// The partial document is used in conjunction with the specified Merge Options to perform the partial update
         /// </summary>
+        /// <param name="databaseName">Azure Cosmos DB Database containing the document to be updated</param>
+        /// <param name="collectionName">Azure Cosmos DB collection containing the document to be updated</param>
+        /// <param name="partitionKey">Partition key of the document to be partially updated</param>
+        /// <param name="id">id of the document to be partially updated</param>
+        /// <param name="partialUpdateDocument">Document containing the partial updates</param>
+        /// <param name="partialUpdateMergeOptions">Merge options specifying the parameters of the partial update</param>
+        public async Task<List<ResourceResponse<Document>>> ExecutePartialUpdate(
+            string databaseName,
+            string collectionName,
+            string queryText,
+            JObject partialUpdateDocument,
+            string partitionKey = null,
+            PartialUpdateMergeOptions partialUpdateMergeOptions = null)
+        {
+            // Null partition key error handling
+            if (string.IsNullOrEmpty(queryText))
+            {
+                throw new ArgumentException("Query text cannot be null or empty");
+            }
+
+            // Validate the inputs to the Partial Update method and set the default PartialUpdateMergeOptions if needed
+            this.ValidateInputs(databaseName, collectionName, partialUpdateDocument, partialUpdateMergeOptions);
+
+            // Retrieve the documents to be updated
+            List<Document> documentsMatchingQuery = await CosmosDBHelper.QueryDocuments(this.DocumentClient, databaseName, collectionName, queryText, this.MaxRetriesOnThrottledAttempts);
+
+            List<ResourceResponse<Document>> partialUpdateResponse = new List<ResourceResponse<Document>>();
+
+            foreach (Document eachDocumenToUpdate in documentsMatchingQuery)
+            {
+                partialUpdateResponse.Add(await this.ExecuteUpdate(
+                    databaseName,
+                    collectionName,
+                    JObject.Parse(eachDocumenToUpdate.ToString()),
+                    partialUpdateDocument,
+                    partialUpdateMergeOptions));
+            }
+
+            return partialUpdateResponse;
+        }
+
+        /// <summary>
+        /// Execute a partial update of the document specified by the partition key and id. 
+        /// The partial document is used in conjunction with the specified Merge Options to perform the partial update
+        /// </summary>
+        /// <param name="databaseName">Azure Cosmos DB Database containing the document to be updated</param>
+        /// <param name="collectionName">Azure Cosmos DB collection containing the document to be updated</param>
         /// <param name="partitionKey">Partition key of the document to be partially updated</param>
         /// <param name="id">id of the document to be partially updated</param>
         /// <param name="partialUpdateDocument">Document containing the partial updates</param>
@@ -42,8 +89,20 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             JObject partialUpdateDocument,
             PartialUpdateMergeOptions partialUpdateMergeOptions = null)
         {
+            // Null partition key error handling
+            if (string.IsNullOrEmpty(partitionKey))
+            {
+                throw new ArgumentException("Partition key cannot be null or empty");
+            }
+
+            // Null document id error handling
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Document id cannot be null or empty");
+            }
+
             // Validate the inputs to the Partial Update method and set the default PartialUpdateMergeOptions if needed
-            this.ValidateInputs(partitionKey, id, partialUpdateDocument, partialUpdateMergeOptions);
+            this.ValidateInputs(databaseName, collectionName, partialUpdateDocument, partialUpdateMergeOptions);
 
             // Retrieve the document to be partially updated
             Document documentToPartiallyUpdate = await CosmosDBHelper.ReadDocmentAsync(this.DocumentClient, databaseName, collectionName, partitionKey, id, this.MaxRetriesOnThrottledAttempts);
@@ -63,18 +122,25 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             }
         }
 
-        private void ValidateInputs(string partitionKey, string id, JObject partialUpdateDocument, PartialUpdateMergeOptions partialUpdateMergeOptions)
+        /// <summary>
+        /// Validates the inputs to the partial update method
+        /// </summary>
+        /// <param name="databaseName">Azure Cosmos DB database containing the document to be updated</param>
+        /// <param name="collectionName">Azure Cosmos DB collection containing the document to be updated</param>
+        /// <param name="partialUpdateDocument">The document containing the updates to be made</param>
+        /// <param name="partialUpdateMergeOptions">Merge Options specifying the nature of the updates</param>
+        private void ValidateInputs(string databaseName, string collectionName, JObject partialUpdateDocument, PartialUpdateMergeOptions partialUpdateMergeOptions)
         {
             // Null partition key error handling
-            if (string.IsNullOrEmpty(partitionKey))
+            if (string.IsNullOrEmpty(databaseName))
             {
-                throw new ArgumentException("Partition key cannot be null or empty");
+                throw new ArgumentException("Database name key cannot be null or empty");
             }
 
             // Null document id error handling
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(collectionName))
             {
-                throw new ArgumentException("Document id cannot be null or empty");
+                throw new ArgumentException("Collection name cannot be null or empty");
             }
 
             // Null partial update error handling
@@ -101,6 +167,12 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             }
         }
 
+        /// <summary>
+        /// This method finds the specific object within the document which contains the fields to be updated
+        /// </summary>
+        /// <param name="documentToUpdate">The document retrieved from Azure Cosmos DB to be updated</param>
+        /// <param name="partialUpdateMergeOptions">Merge Options specifying the nature of the update operation</param>
+        /// <returns></returns>
         private JObject FindObjectToUpdate(JObject documentToUpdate, PartialUpdateMergeOptions partialUpdateMergeOptions)
         {
             if (partialUpdateMergeOptions.objectFilteringPropertyName == null)
@@ -159,6 +231,15 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             return null;
         }
 
+        /// <summary>
+        /// Executes the partial update and persists the changes in Cosmos DB
+        /// </summary>
+        /// <param name="databaseName">Azure Cosmos DB database containing the document to be updated</param>
+        /// <param name="collectionName">Azure Cosmos DB collection containing the document to be updated</param>
+        /// <param name="documentToUpdate">Document on which the partial updates were applied</param>
+        /// <param name="partialUpdateDocument">JObject containing the partial updates</param>
+        /// <param name="partialUpdateMergeOptions">Merge Options specifying the nature of the updates</param>
+        /// <returns></returns>
         public async Task<ResourceResponse<Document>> ExecuteUpdate(string databaseName, string collectionName, JObject documentToUpdate, JObject partialUpdateDocument, PartialUpdateMergeOptions partialUpdateMergeOptions)
         {
             // Retrieve the object within the document to update
@@ -209,6 +290,13 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             return await CosmosDBHelper.UpsertDocumentAsync(this.DocumentClient, databaseName, collectionName, documentToUpdate, this.MaxRetriesOnThrottledAttempts);
         }
 
+        /// <summary>
+        /// Executes an update of an object within the document
+        /// </summary>
+        /// <param name="documentToUpdate">Object within the document to be updated</param>
+        /// <param name="mergeDocument">Document containing the partial updates</param>
+        /// <param name="objectPropertyName">The name of the object within the parent document, to be updated</param>
+        /// <param name="partialUpdateMergeOptions">Merge Options specifying the nature of the updates</param>
         private void ExecuteObjectMerge(JObject documentToUpdate, JObject mergeDocument, string objectPropertyName, PartialUpdateMergeOptions partialUpdateMergeOptions)
         {
             // If the object to update does not contain the object to be merged, simply add the object into the object to be merged
@@ -232,6 +320,13 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             }
         }
 
+        /// <summary>
+        /// Executes an update of array within the document
+        /// </summary>
+        /// <param name="documentToUpdate">Object within the document to be updated</param>
+        /// <param name="mergeDocument">Document containing the partial updates</param>
+        /// <param name="arrayPropertyName">The name of the array within the parent document, to be updated</param>
+        /// <param name="partialUpdateMergeOptions">Merge Options specifying the nature of the updates</param>
         private void ExecuteArrayMerge(JObject documentToUpdate, JObject mergeDocument, string arrayPropertyName, PartialUpdateMergeOptions partialUpdateMergeOptions)
         {
             if (partialUpdateMergeOptions.ArrayMergeOptions == ArrayMergeOptions.CONCAT ||
@@ -321,30 +416,6 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdate
             {
                 documentToUpdate[arrayPropertyName] = mergeDocument[arrayPropertyName];
             }
-        }
-
-        private JTokenType GetArrayType(JArray jArrayToBeUpdated)
-        {
-            if (jArrayToBeUpdated != null && jArrayToBeUpdated.Count > 0)
-            {
-                foreach (JToken eachArrayValue in jArrayToBeUpdated.Values())
-                {
-                    if (eachArrayValue.Type == JTokenType.Object)
-                    {
-                        return JTokenType.Object;
-                    }
-                    else if (eachArrayValue.Type == JTokenType.Integer || eachArrayValue.Type == JTokenType.Float)
-                    {
-                        return JTokenType.Integer;
-                    }
-                    else if (eachArrayValue.Type == JTokenType.String)
-                    {
-                        return JTokenType.String;
-                    }
-                }
-            }
-
-            return JTokenType.Object;
-        }
+        }       
     }
 }

@@ -3,8 +3,10 @@ namespace Microsoft.Azure.CosmosDB.CosmosDBPartialUpdate
 {
     using Microsoft.Azure.Documents.Client;
     using Microsoft.Azure.Documents;
+    using Microsoft.Azure.Documents.Linq;
 
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -348,6 +350,96 @@ namespace Microsoft.Azure.CosmosDB.CosmosDBPartialUpdate
             }
 
             return createdDocument;
+        }
+
+        /// <summary>
+        /// Queries the Azure Cosmos DB container with the input query text and returns the result set
+        /// </summary>
+        /// <param name="client">DocumentClient instance to interact with Azure Cosmos DB Service</param>
+        /// <param name="databaseName">Database name of the collection containing the documents to query</param>
+        /// <param name="collectionName">Azure Cosmos DB collection containing the documents to query</param>
+        /// <param name="queryText">Query string to use when querying the Azure Cosmos DB collection</param>
+        /// <param name="maxRetriesOnDocumentClientExceptions">Maximum number of retries when rate limited</param>
+        /// <returns></returns>
+        public static async Task<List<Document>> QueryDocuments(
+            DocumentClient client,
+            string databaseName,
+            string collectionName,
+            string queryText,
+            int maxRetriesOnDocumentClientExceptions)
+        {
+            List<Document> documentsMatchingQuery = new List<Document>();
+
+            int numRetries = 0;
+            string collectionLink = UriFactory.CreateDocumentCollectionUri(databaseName, collectionName).ToString();
+
+            try
+            {
+                var query = client.CreateDocumentQuery<Document>(collectionLink, queryText,
+                new FeedOptions()
+                {
+                    MaxDegreeOfParallelism = -1,
+                    MaxItemCount = 1000
+                }).AsDocumentQuery();
+                while (query.HasMoreResults)
+                {
+                    var result = await query.ExecuteNextAsync();
+                    foreach (Document eachDocument in result)
+                    {
+                        documentsMatchingQuery.Add(eachDocument);
+                    }
+                }
+            }
+            catch (DocumentClientException ex)
+            {
+                // Retry when rate limited for as many times as specified
+                if ((int)ex.StatusCode == 429)
+                {
+                    // If the write is rate limited, wait for twice the recommended wait time specified in the exception
+                    int sleepTime = (int)ex.RetryAfter.TotalMilliseconds * 2;
+
+                    bool success = false;
+
+                    while (!success && numRetries <= maxRetriesOnDocumentClientExceptions)
+                    {
+                        // Sleep for twice the recommended amount from the Cosmos DB rate limiting exception
+                        Thread.Sleep(sleepTime);
+
+                        try
+                        {
+                            var query = client.CreateDocumentQuery<Document>(collectionLink, queryText,
+                            new FeedOptions()
+                            {
+                                MaxDegreeOfParallelism = -1,
+                                MaxItemCount = 1000
+                            }).AsDocumentQuery();
+                            while (query.HasMoreResults)
+                            {
+                                var result = await query.ExecuteNextAsync();
+                                foreach (Document eachDocument in result)
+                                {
+                                    documentsMatchingQuery.Add(eachDocument);
+                                }
+                            }
+                        }
+                        catch (DocumentClientException iex)
+                        {
+                            if ((int)iex.StatusCode == 429)
+                            {
+                                sleepTime = (int)iex.RetryAfter.TotalMilliseconds * 2;
+                            }
+
+                            numRetries++;
+                        }
+                        catch (Exception ie)
+                        {
+                            numRetries++;
+                        }
+                    }
+                }
+            }
+
+            return documentsMatchingQuery;
         }
     }
 }
