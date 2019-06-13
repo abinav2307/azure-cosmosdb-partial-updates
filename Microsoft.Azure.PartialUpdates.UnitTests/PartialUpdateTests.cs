@@ -87,8 +87,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate, 
                 partialUpdateMergeOptions);
 
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
+
             // Assert the value of updated field
-            Assert.AreEqual(updatedDocument.Resource.GetPropertyValue<string>("employer"), "Some Other Company");
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForRootLevelPartialUpdateWithSingleField().ToString());
         }
 
         /// <summary>
@@ -112,10 +114,6 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
 
             Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
 
-            // Assert the value of the fields to be updated, prior to the update
-            Assert.AreEqual(originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<string>("employer"), "Some Company");
-            Assert.AreEqual(originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<string>("previousEmployer"), "Some Other Company");
-
             // Swapping the values of the 'employer' and 'previousEmployer' for the partial update
             JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"employer\":\"Some Other Company\", \"previousEmployer\": \"Some Company\"}");
 
@@ -131,11 +129,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate,
                 partialUpdateMergeOptions);
 
-            // Assert the update value of 'employer'
-            Assert.AreEqual(updatedDocument.Resource.GetPropertyValue<string>("employer"), "Some Other Company");
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-            // Assert the update value of 'previousEmployer'
-            Assert.AreEqual(updatedDocument.Resource.GetPropertyValue<string>("previousEmployer"), "Some Company");
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForRootLevelPartialUpdateWithMultipleFields().ToString());
         }
 
         /// <summary>
@@ -157,16 +154,6 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
 
             Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
 
-            JArray previousJobs = originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobs)
-            {
-                if(((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 4);
-                }
-            }
-
             JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"managers\": [\"Aristotle\",\"Gates\",\"Jobbs\"]}");
 
             PartialUpdateMergeOptions partialUpdateMergeOptions = new PartialUpdateMergeOptions();
@@ -186,22 +173,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate,
                 partialUpdateMergeOptions);
 
-            List<string> updatedArrayOfManagers = new List<string>(){ "Aristotle", "Bartholomew", "Columbus", "Alexander", "Gates", "Jobbs" };
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 6);
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }            
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForSuccessfulUpdateOfArrayUsingUnionMergeOption().ToString());
         }
 
         /// <summary>
@@ -223,16 +198,6 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
 
             Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
 
-            JArray previousJobs = originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobs)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 4);
-                }
-            }
-
             JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"managers\": [\"Aristotle\",\"Gates\",\"Jobbs\"]}");
 
             PartialUpdateMergeOptions partialUpdateMergeOptions = new PartialUpdateMergeOptions();
@@ -252,22 +217,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate,
                 partialUpdateMergeOptions);
 
-            List<string> updatedArrayOfManagers = new List<string>() { "Aristotle", "Bartholomew", "Columbus", "Alexander", "Gates", "Jobbs" };
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 7);
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForSuccessfulUpdateOfArrayUsingConcatMergeOption().ToString());
         }
 
         /// <summary>
@@ -289,16 +242,6 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
 
             Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
 
-            JArray previousJobs = originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobs)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 4);
-                }
-            }
-
             JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"managers\": [\"Aristotle\",\"Gates\",\"Jobbs\"]}");
 
             PartialUpdateMergeOptions partialUpdateMergeOptions = new PartialUpdateMergeOptions();
@@ -318,22 +261,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate,
                 partialUpdateMergeOptions);
 
-            List<string> updatedArrayOfManagers = new List<string>() { "Aristotle", "Gates", "Jobbs" };
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 3);
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForSuccessfulUpdateOfArrayUsingReplaceMergeOption().ToString());
         }
 
         /// <summary>
@@ -355,16 +286,6 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
 
             Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
 
-            JArray previousJobs = originalDocumentPriorToPartialUpdate.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobs)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 4);
-                }
-            }
-
             JObject sampleUpdateDocumentWithOnePropertyToUpdate = JObject.Parse("{\"managers\": [\"Aristotle\",\"Gates\",\"Jobbs\"]}");
 
             PartialUpdateMergeOptions partialUpdateMergeOptions = new PartialUpdateMergeOptions();
@@ -384,22 +305,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithOnePropertyToUpdate,
                 partialUpdateMergeOptions);
 
-            List<string> updatedArrayOfManagers = new List<string>() { "Aristotle", "Bartholomew", "Columbus", "Alexander", "Gates", "Jobbs" };
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                if (((string)eachObject["id"]).Equals("1"))
-                {
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    Assert.AreEqual(arrayOfManagers.Count, 7);
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForSuccessfulUpdateOfArrayUsingMerge_MergeOption().ToString());
         }
 
         /// <summary>
@@ -441,26 +350,10 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithObjectUpdate,
                 partialUpdateMergeOptions);
 
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                // Since the object was replaced, id should have been removed
-                // since id was not present in the payload of the partial update
-                if (eachObject["id"] == null)
-                {
-                    Assert.AreEqual((string)eachObject["title"], "Software Engineer 2");
-                    Assert.AreEqual((string)eachObject["employer"], "One Last Company Again");
-                    Assert.AreEqual((string)eachObject["location"], "Houston");
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    List<string> updatedArrayOfManagers = new List<string>() { "Aristotle", "Bartholomew", "Columbus", "Alexander"};
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForNestedObjectUsingReplaceMergeOption().ToString());
         }
 
         /// <summary>
@@ -502,26 +395,55 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                 sampleUpdateDocumentWithObjectUpdate,
                 partialUpdateMergeOptions);
 
-            JArray previousJobsUpdated = updatedDocument.Resource.GetPropertyValue<JArray>("previousJobs");
-            foreach (JObject eachObject in previousJobsUpdated)
-            {
-                // Since the object was update, id should NOT have been removed
-                // even though id was not present in the payload of the partial update
-                if (((string)eachObject["id"]).Equals("4"))
-                {
-                    Assert.AreEqual((string)eachObject["title"], "Software Engineer 2");
-                    Assert.AreEqual((string)eachObject["employer"], "One Last Company Again");
-                    Assert.AreEqual((string)eachObject["location"], "Houston");
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
 
-                    List<string> updatedArrayOfManagers = new List<string>() { "Gates", "Aristotle", "Bartholomew", "Columbus", "Alexander" };
-                    JArray arrayOfManagers = (JArray)eachObject["managers"];
-                    foreach (JToken eachElementInArrayOfManagers in arrayOfManagers.Children())
-                    {
-                        var match = updatedArrayOfManagers.First(stringToCheck => stringToCheck.Contains(eachElementInArrayOfManagers.ToObject<string>()));
-                        Assert.IsNotNull(match);
-                    }
-                }
-            }
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForNestedObjectUsingUpdateMergeOption().ToString());
+        }
+
+        /// <summary>
+        /// Test to verify a nested object is successfully updated with UPDATE ObjectMergeOptions
+        /// </summary>
+        [TestMethod]
+        [Owner("abinav2307")]
+        public async Task TestSuccessfulAdditionOfObjectToAnArrayOfObjectsUsingArrayUpdateMergeOption()
+        {
+            await this.CreateDocumentAsync(GetSampleDocument());
+
+            ResourceResponse<Document> originalDocumentPriorToPartialUpdate = await CosmosDBHelper.ReadDocmentAsync(
+                this.DocumentClient,
+                this.DatabaseName,
+                this.CollectionName,
+                "123",
+                "123",
+                this.MaxRetriesOnDocumentClienException);
+
+            Assert.IsNotNull(originalDocumentPriorToPartialUpdate);
+
+            JObject sampleUpdateDocumentWithObjectUpdate =
+                JObject.Parse("{\"previousJobs\":[{\"id\":\"5\",\"title\":\"Software Engineer 2\",\"employer\":\"Still Another Company\",\"location\":\"Helsinki\",\"managers\":[\"Kobe\",\"Shaq\",\"Kareem\",\"Magic\"]}]}");
+
+            PartialUpdateMergeOptions partialUpdateMergeOptions = new PartialUpdateMergeOptions();
+            partialUpdateMergeOptions.ArrayMergeOptions = ArrayMergeOptions.MERGE;
+            partialUpdateMergeOptions.NullValueMergeOptions = NullValueMergeOptions.IGNORE;
+            partialUpdateMergeOptions.ObjectMergeOptions = ObjectMergeOptions.UPDATE;
+            partialUpdateMergeOptions.objectFilteringPropertyName = "id";
+            partialUpdateMergeOptions.objectFilteringPropertyValue = "123";
+
+            CosmosDBPartialUpdater partialUpdater = new CosmosDBPartialUpdater(this.DocumentClient);
+
+            ResourceResponse<Document> updatedDocument = await partialUpdater.ExecutePartialUpdate(
+                this.DatabaseName,
+                this.CollectionName,
+                "123",
+                "123",
+                sampleUpdateDocumentWithObjectUpdate,
+                partialUpdateMergeOptions);
+
+            JObject documentPostUpdate = RemoveMetadataFieldsFromCosmosDBResponse(updatedDocument);
+
+            // Assert the value of updated field
+            Assert.AreEqual(documentPostUpdate.ToString(), GetResultForSuccessfulAdditionOfObjectToAnArrayOfObjectsUsingArrayUpdateMergeOption().ToString());
         }
 
         /// <summary>
@@ -574,9 +496,20 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
             }
         }
 
+        private static JObject RemoveMetadataFieldsFromCosmosDBResponse(ResourceResponse<Document> updatedDocument)
+        {
+            JObject documentPostUpdate = JObject.Parse(updatedDocument.Resource.ToString());
+            documentPostUpdate.Remove("_rid");
+            documentPostUpdate.Remove("_self");
+            documentPostUpdate.Remove("_attachments");
+            documentPostUpdate.Remove("_ts");
+            documentPostUpdate.Remove("_etag");
+
+            return documentPostUpdate;
+        }
+
         private static JObject GetSampleDocument()
         {
-            //return JObject.Parse("{\"id\":\"123\",\"firstName\":\"Abinav\",\"lastName\":\"Ramesh\",\"dateOfBirth\":\"23 - July - 1988\",\"employer\":\"AlaskaAirlines\",\"previousEmployer\":\"PROS,inc ? \",\"citiesLivedIn\":[\"Dubai\",\"AnnArbor\",\"Ithaca\",\"Houston\",\"Seattle\"],\"previousJobs\":[{\"id\":\"1\",\"bookingClasses\":[{\"id\":\"123456789\",\"totalSeatsAvailable\":75,\"totalBookings\":30,\"grouBookings\":12,\"compartmentCodes\":[{\"id\":\"1234567890\",\"name\":\"Z\",\"class\":\"Business\"}]}]},{\"id\":\"2\",\"title\":\"SoftwareEngineer1\",\"employer\":\"PROS,INC\",\"location\":\"Houston\",\"managers\":[\"Aristotle\",\"Bartholomew\",\"Columbus\",\"Alexander\"]},{\"id\":\"3\",\"title\":\"SoftwareEngineer1\",\"employer\":\"MicrosoftCorporation\",\"location\":\"Seattle\",\"managers\":[\"Aristotle\",\"Bartholomew\",\"Columbus\",\"Alexander\",\"Aristotle\"]},{\"id\":\"4\",\"title\":\"SoftwareEngineer2\",\"employer\":\"MicrosoftCorporation\",\"location\":\"Seattle\",\"managers\":[\"Gates\",\"Bartholomey\"],\"previousEmployer\":\"PROS\"}]}");
             return JObject.Parse(
                 @"{
                     ""id"":""123"",
@@ -638,14 +571,594 @@ namespace Microsoft.Azure.PartialUpdates.UnitTests
                   }");
         }
 
-        private static JObject GetSamplePartialUpdateDocumentWithArray()
+        private static JObject GetResultForRootLevelPartialUpdateWithSingleField()
         {
-            return JObject.Parse("{\"managers\": [\"Aristotle\",\"Gates\",\"Jobbs\"]}");
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Other Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
         }
 
-        private static JObject GetSamplePartialUpdateDocumentWithNestedObject()
+        private static JObject GetResultForRootLevelPartialUpdateWithMultipleFields()
         {
-            return JObject.Parse("{\"title\":\"Software Engineer 1\",\"employer\":\"PROS,INC\",\"location\":\"Houston\",\"managers\":[\"Aristotle\",\"Bartholomew\",\"Columbus\",\"Alexander\"]}");
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Other Company"",
+                    ""previousEmployer"":""Some Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForSuccessfulUpdateOfArrayUsingUnionMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Gates"",
+                                ""Jobbs""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForSuccessfulUpdateOfArrayUsingConcatMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle"",
+                                ""Gates"",
+                                ""Jobbs""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForSuccessfulUpdateOfArrayUsingReplaceMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Gates"",
+                                ""Jobbs""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForSuccessfulUpdateOfArrayUsingMerge_MergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle"",
+                                ""Gates"",
+                                ""Jobbs""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForNestedObjectUsingUpdateMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer 2"",
+                            ""employer"":""One Last Company Again"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew"",
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForNestedObjectUsingReplaceMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""title"":""Software Engineer 2"",
+                            ""employer"":""One Last Company Again"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        }]
+                  }");
+        }
+
+        private static JObject GetResultForSuccessfulAdditionOfObjectToAnArrayOfObjectsUsingArrayUpdateMergeOption()
+        {
+            return JObject.Parse(
+                @"{
+                    ""id"":""123"",
+                    ""firstName"":""Abinav"",
+                    ""lastName"":""Ramesh"",
+                    ""dateOfBirth"":""23 - July - 1988"",
+                    ""employer"":""Some Company"",
+                    ""previousEmployer"":""Some Other Company"",
+                    ""citiesLivedIn"": [
+                        ""Dubai"",
+                        ""AnnArbor"",
+                        ""Ithaca"",
+                        ""Houston"",
+                        ""Seattle""],
+                    ""previousJobs"":[
+                        {
+                            ""id"":""1"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Company"",
+                            ""location"":""Houston"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""2"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Some Other Company"",
+                            ""location"":""Ann Arbor"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander""]
+                        },
+                        {
+                            ""id"":""3"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""Yet Another Company"",
+                            ""location"":""Ithaca"",
+                            ""managers"":[
+                                ""Aristotle"",
+                                ""Bartholomew"",
+                                ""Columbus"",
+                                ""Alexander"",
+                                ""Aristotle""]
+                        },
+                        {
+                            ""id"":""4"",
+                            ""title"":""Software Engineer"",
+                            ""employer"":""One Last Company"",
+                            ""location"":""Seattle"",
+                            ""managers"":[
+                                ""Gates"",
+                                ""Bartholomew""]
+                        },
+                        {
+                            ""id"":""5"",
+                            ""title"":""Software Engineer 2"",
+                            ""employer"":""Still Another Company"",
+                            ""location"":""Helsinki"",
+                            ""managers"":[
+                                ""Kobe"",
+                                ""Shaq"",
+                                ""Kareem"",
+                                ""Magic""]
+                        }]
+                  }");
         }
 
         private static PartialUpdateMergeOptions CreatePartialUpdateOptionsForRootLevelPartialUpdate()
