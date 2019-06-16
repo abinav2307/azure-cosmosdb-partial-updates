@@ -18,8 +18,8 @@ namespace Microsoft.Azure.CosmosDB.PartialUpdates.NetCore.Tests
         private DocumentCollection Collection = null;
         private int MaxRetriesOnDocumentClienException = 10;
 
-        private string CosmosDBAccountEndpoint = "https://abinav-alaska-partial-update.documents.azure.com:443/";
-        private string CosmosDBAccountKey = "dkhC7gfV4h4BbrsQDmQNKpfgVnNRmIMs2tLbqctrAgeLijBwwbeuVkDQfOXTK5adLeMw0h6iRM3pmmlVtT8Hfw==";
+        private string CosmosDBAccountEndpoint = "";
+        private string CosmosDBAccountKey = "";
         private string DatabaseName = "testDatabase";
         private string CollectionName = "testColl";
         private static string PartitionKeyName = "/id";
