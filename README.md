@@ -1,7 +1,7 @@
 <img src="https://raw.githubusercontent.com/dennyglee/azure-cosmosdb-spark/master/docs/images/azure-cosmos-db-icon.png" width="75">  &nbsp; Azure Cosmos DB Partial Updates Helper for .NET
 ==========================================
 
-## Consuming the Microsoft Azure Cosmos DB BulkExecutor .NET library
+## Consuming the Microsoft Azure Cosmos DB Partial Updates .NET/.NET Core library
 
 The purpose of this project is to make the development effort for partial updates simpler by abstracting away from the user the operations to fetch the document(s) to be updated, deserializing the documents, executing the partial update and then pushing the documents back to the Azure Cosmos DB container. This project includes samples, tests and documentation for consuming the Partial Updates helper library. 
 
