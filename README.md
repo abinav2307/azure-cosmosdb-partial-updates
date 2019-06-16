@@ -99,4 +99,4 @@ List<ResourceResponse<Document>> updatedDocumentList = await partialUpdater.Exec
 	partialUpdateMergeOptions);
 ```
 
-Tests with additional details for partial updates of nested objects and arrays can be found [here] (https://github.com/abinav2307/azure-cosmosdb-partial-updates/blob/master/Microsoft.CosmosDB.PartialUpdates.UnitTests/PartialUpdateTests.cs)
+Tests with additional details for partial updates of nested objects and arrays can be found [here](https://github.com/abinav2307/azure-cosmosdb-partial-updates/blob/master/Microsoft.CosmosDB.PartialUpdates.UnitTests/PartialUpdateTests.cs)
