@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="2.4.0" />
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CosmosDB.PartialUpdates.NetCore">
+      <HintPath>..\Microsoft.CosmosDB.PartialUpdates.NetCore\bin\Debug\netcoreapp2.2\Microsoft.CosmosDB.PartialUpdates.NetCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
